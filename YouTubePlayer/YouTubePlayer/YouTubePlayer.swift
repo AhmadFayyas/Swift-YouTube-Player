@@ -87,7 +87,7 @@ open class YouTubePlayerView: UIView {
     public typealias YouTubePlayerParameters = [String: AnyObject]
     public var baseURL = "about:blank"
     
-    private typealias LoadingCompletionHandler = (_ error: Error) -> Void
+    public typealias LoadingCompletionHandler = (_ error: Error?) -> Void
     private var loadingCompletionHandler: LoadingCompletionHandler?
     
     fileprivate var webView: UIWebView!
@@ -145,13 +145,13 @@ open class YouTubePlayerView: UIView {
     
     // MARK: Load player
     
-    open func loadVideoURL(_ videoURL: URL, completion: LoadingCompletionHandler) {
+    open func loadVideoURL(_ videoURL: URL, completion: LoadingCompletionHandler? = nil) {
         if let videoID = videoIDFromYouTubeURL(videoURL) {
             loadVideoID(videoID, completion: completion)
         }
     }
     
-    open func loadVideoID(_ videoID: String, completion: LoadingCompletionHandler) {
+    open func loadVideoID(_ videoID: String, completion: LoadingCompletionHandler? = nil) {
         var playerParams = playerParameters()
         playerParams["videoId"] = videoID as AnyObject?
         
@@ -223,7 +223,7 @@ open class YouTubePlayerView: UIView {
     
     // MARK: Player setup
     
-    fileprivate func loadWebViewWithParameters(_ parameters: YouTubePlayerParameters, completion: LoadingCompletionHandler) {
+    fileprivate func loadWebViewWithParameters(_ parameters: YouTubePlayerParameters, completion: LoadingCompletionHandler? = nil) {
         
         // Get HTML from player file in bundle
         let rawHTMLString = htmlStringWithFilePath(playerHTMLPath())!
