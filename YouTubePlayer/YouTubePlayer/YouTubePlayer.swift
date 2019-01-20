@@ -82,10 +82,13 @@ public func videoIDFromYouTubeURL(_ videoURL: URL) -> String? {
 }
 
 /** Embed and control YouTube videos */
-open class YouTubePlayerView: UIView, UIWebViewDelegate {
+open class YouTubePlayerView: UIView {
     
     public typealias YouTubePlayerParameters = [String: AnyObject]
     public var baseURL = "about:blank"
+    
+    private typealias LoadingCompletionHandler = (_ error: Error) -> Void
+    private var loadingCompletionHandler: LoadingCompletionHandler?
     
     fileprivate var webView: UIWebView!
     
@@ -142,17 +145,17 @@ open class YouTubePlayerView: UIView, UIWebViewDelegate {
     
     // MARK: Load player
     
-    open func loadVideoURL(_ videoURL: URL) {
+    open func loadVideoURL(_ videoURL: URL, completion: LoadingCompletionHandler) {
         if let videoID = videoIDFromYouTubeURL(videoURL) {
-            loadVideoID(videoID)
+            loadVideoID(videoID, completion: completion)
         }
     }
     
-    open func loadVideoID(_ videoID: String) {
+    open func loadVideoID(_ videoID: String, completion: LoadingCompletionHandler) {
         var playerParams = playerParameters()
         playerParams["videoId"] = videoID as AnyObject?
         
-        loadWebViewWithParameters(playerParams)
+        loadWebViewWithParameters(playerParams, completion: completion)
     }
     
     open func loadPlaylistID(_ playlistID: String) {
@@ -220,7 +223,7 @@ open class YouTubePlayerView: UIView, UIWebViewDelegate {
     
     // MARK: Player setup
     
-    fileprivate func loadWebViewWithParameters(_ parameters: YouTubePlayerParameters) {
+    fileprivate func loadWebViewWithParameters(_ parameters: YouTubePlayerParameters, completion: LoadingCompletionHandler) {
         
         // Get HTML from player file in bundle
         let rawHTMLString = htmlStringWithFilePath(playerHTMLPath())!
@@ -233,6 +236,9 @@ open class YouTubePlayerView: UIView, UIWebViewDelegate {
         
         // Load HTML in web view
         webView.loadHTMLString(htmlString, baseURL: URL(string: baseURL))
+        
+        // set the loading completion handler
+        loadingCompletionHandler = completion
     }
     
     fileprivate func playerHTMLPath() -> String {
@@ -337,10 +343,11 @@ open class YouTubePlayerView: UIView, UIWebViewDelegate {
             }
         }
     }
-    
-    
-    // MARK: UIWebViewDelegate
-    
+}
+
+// MARK: UIWebViewDelegate
+
+extension YouTubePlayerView: UIWebViewDelegate {
     open func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebView.NavigationType) -> Bool {
         
         let url = request.url
@@ -350,7 +357,16 @@ open class YouTubePlayerView: UIView, UIWebViewDelegate {
         
         return true
     }
+    
+    open func webViewDidFinishLoad(_ webView: UIWebView) {
+        loadingCompletionHandler?(nil)
+    }
+    
+    public func webView(_ webView: UIWebView, didFailLoadWithError error: Error) {
+        loadingCompletionHandler?(error)
+    }
 }
+
 
 private func printLog(_ strings: CustomStringConvertible...) {
     let toPrint = ["[YouTubePlayer]"] + strings
