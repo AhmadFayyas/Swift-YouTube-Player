@@ -89,6 +89,7 @@ open class YouTubePlayerView: UIView {
     
     public typealias LoadingCompletionHandler = (_ error: Error?) -> Void
     private var loadingCompletionHandler: LoadingCompletionHandler?
+    private var isLoadingCompletionHandlerCalled = false
     
     fileprivate var webView: UIWebView!
     
@@ -359,11 +360,10 @@ extension YouTubePlayerView: UIWebViewDelegate {
     }
     
     open func webViewDidFinishLoad(_ webView: UIWebView) {
+        if isLoadingCompletionHandlerCalled { return }
+        
         loadingCompletionHandler?(nil)
-    }
-    
-    public func webView(_ webView: UIWebView, didFailLoadWithError error: Error) {
-        loadingCompletionHandler?(error)
+        isLoadingCompletionHandlerCalled = true
     }
 }
 
